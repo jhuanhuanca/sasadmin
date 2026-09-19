@@ -24,6 +24,8 @@ const form = reactive({
   commission_percentage: 10,
   is_active: true,
   paddle_price_id: '',
+  paddle_intro_discount_id: '',
+  intro_price: 1,
 })
 
 async function load(): Promise<void> {
@@ -46,6 +48,8 @@ function start(plan?: Plan): void {
   form.commission_percentage = Number(plan?.commission_percentage ?? 10)
   form.is_active = plan?.is_active ?? true
   form.paddle_price_id = plan?.paddle_price_id ?? plan?.stripe_price_id ?? ''
+  form.paddle_intro_discount_id = plan?.paddle_intro_discount_id ?? ''
+  form.intro_price = Number(plan?.intro_price ?? 1)
   errors.value = {}
   message.value = ''
   open.value = true
@@ -159,12 +163,22 @@ onMounted(load)
             <label class="form-label">% comisión</label>
             <input v-model.number="form.commission_percentage" type="number" min="0" max="100" class="form-control" />
           </div>
+          <div class="col-6">
+            <label class="form-label">Primer mes (USD)</label>
+            <input v-model.number="form.intro_price" type="number" min="0" step="0.01" class="form-control" />
+          </div>
           <div class="col-12">
             <label class="form-label">ID de precio Paddle</label>
             <input v-model="form.paddle_price_id" class="form-control" placeholder="pri_..." />
             <p class="form-text mb-0">
-              Crea el producto/precio recurrente en Paddle Billing y pega aquí el <code>pri_</code>.
-              La tienda de cada líder no usa Paddle.
+              Precio de lista recurrente. En Paddle el precio <strong>no debe tener trial</strong> (un mes a US$ 0). El arranque es US$ 1 con un descuento <code>dsc_</code> de un solo ciclo.
+            </p>
+          </div>
+          <div class="col-12">
+            <label class="form-label">ID de descuento intro Paddle</label>
+            <input v-model="form.paddle_intro_discount_id" class="form-control" placeholder="dsc_..." />
+            <p class="form-text mb-0">
+              En Paddle: descuento de un ciclo que deja el primer cobro en US$ 1. Obligatorio para publicar el checkout. No uses “trial period” del precio.
             </p>
           </div>
         </div>

@@ -54,6 +54,8 @@ export interface Plan {
   features?: string[] | null
   is_active: boolean
   paddle_price_id?: string | null
+  paddle_intro_discount_id?: string | null
+  intro_price?: number | string
   stripe_price_id?: string | null
 }
 
