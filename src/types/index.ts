@@ -99,6 +99,8 @@ export interface Company {
     secondary?: string
     accent?: string
   } | null
+  enabled_tools?: string[]
+  available_tools?: string[]
 }
 
 export interface Category {

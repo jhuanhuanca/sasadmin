@@ -4,6 +4,7 @@ import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { catalog } from '@/api/catalog'
 import ColorCodeField from '@/components/ColorCodeField.vue'
 import PageHeader from '@/components/PageHeader.vue'
+import { CATALOG_TOOL_KEYS, CATALOG_TOOL_OPTIONS } from '@/data/catalogTools'
 import type { Company } from '@/types'
 import { errorMessage, fieldErrors, unwrapData } from '@/utils/http'
 import { useCatalogStore } from '@/stores/catalog'
@@ -25,6 +26,7 @@ const form = reactive({
   primary: '#ffd452',
   secondary: '#252525',
   accent: '#f7f5ed',
+  enabled_tools: [...CATALOG_TOOL_KEYS] as string[],
 })
 const errors = ref<Record<string, string[]>>({})
 const message = ref('')
@@ -46,6 +48,8 @@ onMounted(async () => {
     form.primary = company.color_palette?.primary ?? '#ffd452'
     form.secondary = company.color_palette?.secondary ?? '#252525'
     form.accent = company.color_palette?.accent ?? '#f7f5ed'
+    const tools = Array.isArray(company.enabled_tools) ? company.enabled_tools : [...CATALOG_TOOL_KEYS]
+    form.enabled_tools = tools.filter((key) => CATALOG_TOOL_KEYS.includes(key as (typeof CATALOG_TOOL_KEYS)[number]))
   } catch (error) {
     message.value = errorMessage(error, 'No se pudo cargar la empresa')
   } finally {
@@ -68,6 +72,7 @@ async function submit(): Promise<void> {
       secondary: form.secondary,
       accent: form.accent,
     },
+    enabled_tools: form.enabled_tools,
   }
 
   try {
@@ -89,6 +94,21 @@ async function submit(): Promise<void> {
   } finally {
     saving.value = false
   }
+}
+
+function toolChecked(key: string): boolean {
+  return form.enabled_tools.includes(key)
+}
+
+function toggleTool(key: string, checked: boolean): void {
+  if (checked) {
+    if (!form.enabled_tools.includes(key)) {
+      form.enabled_tools = [...form.enabled_tools, key]
+    }
+    return
+  }
+
+  form.enabled_tools = form.enabled_tools.filter((item) => item !== key)
 }
 </script>
 
@@ -128,6 +148,36 @@ async function submit(): Promise<void> {
           <input v-model="form.is_active" type="checkbox" class="form-check-input" />
           <span class="form-check-label">Empresa activa</span>
         </label>
+      </div>
+      <div class="col-12">
+        <p class="form-label mb-1">Herramientas visibles en el panel del líder</p>
+        <p class="small text-secondary mb-3">
+          Desmarca las que esta marca no usa. El resto de empresas no cambia.
+        </p>
+        <div class="d-flex flex-wrap gap-2 mb-2">
+          <button type="button" class="btn btn-sm btn-outline-secondary" @click="form.enabled_tools = [...CATALOG_TOOL_KEYS]">
+            Todas
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" @click="form.enabled_tools = []">
+            Ninguna
+          </button>
+        </div>
+        <div class="row g-2">
+          <div v-for="tool in CATALOG_TOOL_OPTIONS" :key="tool.key" class="col-md-6">
+            <label class="form-check border rounded-3 p-3 h-100">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                :checked="toolChecked(tool.key)"
+                @change="toggleTool(tool.key, ($event.target as HTMLInputElement).checked)"
+              />
+              <span class="form-check-label">
+                <span class="d-block fw-semibold">{{ tool.label }}</span>
+                <span class="small text-secondary">{{ tool.hint }}</span>
+              </span>
+            </label>
+          </div>
+        </div>
       </div>
     </div>
     <button class="btn btn-accent mt-4" :disabled="saving">{{ saving ? 'Guardando…' : 'Guardar' }}</button>
